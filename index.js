@@ -12,8 +12,8 @@ async function runModules (modules) {
     app[moduleName] = new ComponentClass(config[moduleName] || {}, app)
   })
 
-  for (let index = 0; index < modules.length; index++) {
-    await app[modules[index]].run()
+  for (let index = 0; index < modules.length; index++) { // ++ can disable
+    await app[modules[index]].run() // can disable eslint
   }
 }
 

@@ -5,6 +5,11 @@ const controller = require('./controller/')
 const cors = require('cors')
 const Session = require('./session')
 
+function logger (req, res, next) {
+  console.info('[Server]', req.method, req.originalUrl, 'from', req.ip)
+  next()
+}
+
 class Server {
   constructor (config, app) {
     this.config = config
@@ -15,11 +20,12 @@ class Server {
     if (config.cors) {
       this.server.use(cors(config.cors))
     }
-    this.server.use(this.logger)
+    this.server.use(logger)
 
     this.server.use(bodyParser.json({ limit: '80mb' }))
 
-    // this.server.use('/login/', controller.login(this.app))
+    this.server.use('/login/', controller.login(this.app))
+    this.server.use('/register/', controller.register(this.app))
 
     this.server.use('/api/', this.sessionMiddleware.bind(this))
     this.server.use('/api/session', controller.session(this.app))
@@ -45,17 +51,21 @@ class Server {
     }
   }
 
-  logger (req, res, next) {
-    console.info('[Server]', req.method, req.originalUrl, 'from', req.ip)
-    next()
-  }
-
   errorHandling (err, req, res, next) {
+    if (this.error) {
+      console.log(this.error)
+    }
     if (!err.status) {
       err.status = 400
     }
+    if (err.status >= 500) {
+      // save err into db
+      res.status(500)
+      res.json({ error: 'Internal server error' })
+      return
+    }
     res.status(err.status)
-    res.json({error: err.message})
+    res.json({ error: err.message })
     console.error(err.stack)
   }
 
