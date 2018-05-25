@@ -21,6 +21,11 @@ class SessionService {
     this.session = null
   }
 
+  hasRight (right) {
+    const rights = Array.isArray(right) ? right : [right]
+    return rights.every(rgt => this.account.rights.includes(rgt))
+  }
+
   async generateApiKey () {
     this.apiKey = new Promise((resolve, reject) => {
       crypto.randomBytes(30, (err, buf) => {
@@ -58,7 +63,7 @@ class SessionService {
     return this.app.mongo.getOne('account', { email })
   }
 
-  async login (email, password) {
+  async login (email, password) { // Returns session
     let account
     try {
       account = await this.app.mongo.getOne('account', { email, password: await hashPassword(password) })
@@ -70,7 +75,13 @@ class SessionService {
       throw new Error('Your account has not been activated yet')
     }
     delete account.password
-    return { ...account, apiKey: await this.generateApiKey() }
+    const apiKey = await this.generateApiKey()
+    await this.app.mongo.insert('session', { email, apiKey })
+    return this.app.mongo.getOne('session', { apiKey })
+  }
+
+  async getAccount () {
+    return this.account
   }
 
   async getSessionFromApiKey (apiKey) { // Returns full info

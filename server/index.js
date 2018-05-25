@@ -5,6 +5,17 @@ const controller = require('./controller/')
 const cors = require('cors')
 const Session = require('./session')
 
+// TEST: POST Login
+// TEST: POST Register
+// TODO: GET Profil
+// TODO: POST Approve
+// TODO: GET Profiles (admin)
+// TODO: DELETE Profile (admin)
+// TODO: POST Profil
+// TODO: GET Event
+// TODO: POST Event
+// TODO: PUT Event (admin)
+
 function logger (req, res, next) {
   console.info('[Server]', req.method, req.originalUrl, 'from', req.ip)
   next()
@@ -29,6 +40,7 @@ class Server {
 
     this.server.use('/api/', this.sessionMiddleware.bind(this))
     this.server.use('/api/session', controller.session(this.app))
+    this.server.use('/api/account', controller.account(this.app))
 
     this.server.use(this.errorHandling)
     this.server.use(express.static('public'))
@@ -52,11 +64,12 @@ class Server {
   }
 
   errorHandling (err, req, res, next) {
+    let { status } = err
     if (this.error) {
       console.log(this.error)
     }
     if (!err.status) {
-      err.status = 400
+      status = 400
     }
     if (err.status >= 500) {
       // save err into db
@@ -64,7 +77,7 @@ class Server {
       res.json({ error: 'Internal server error' })
       return
     }
-    res.status(err.status)
+    res.status(status)
     res.json({ error: err.message })
     console.error(err.stack)
   }
