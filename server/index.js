@@ -7,11 +7,11 @@ const Session = require('./session')
 
 // TEST: POST Login
 // TEST: POST Register
-// TODO: GET Profil
-// TODO: POST Approve
-// TODO: GET Profiles (admin)
-// TODO: DELETE Profile (admin)
-// TODO: POST Profil
+// TEST: GET Profil
+// TEST: POST Approve
+// TEST: GET Profiles (admin)
+// TEST: DELETE Profile (admin)
+// TODO: POST Profil ??
 // TODO: GET Event
 // TODO: POST Event
 // TODO: PUT Event (admin)

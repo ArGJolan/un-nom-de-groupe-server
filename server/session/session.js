@@ -53,6 +53,10 @@ class SessionService {
   }
 
   async createNewAccount (email, password) { // Returns account
+    const existing = await this.app.mongo.find('account', { filter: { email } })
+    if (existing && existing.length) {
+      throw new Error('This email is already bound to an account')
+    }
     const account = {
       approved: false,
       email,
@@ -78,6 +82,30 @@ class SessionService {
     const apiKey = await this.generateApiKey()
     await this.app.mongo.insert('session', { email, apiKey })
     return this.app.mongo.getOne('session', { apiKey })
+  }
+
+  async deleteAccount (email) {
+    if (this.hasRight('admin') && this.account.email !== email) {
+      try {
+        await this.app.mongo.deleteOne('account', { email })
+      } catch (err) {
+        console.error('Could not find account', email, err)
+        throw new Error('Could not find account', email)
+      }
+    }
+    throw new Error('You don\'t have the permission to do that')
+  }
+
+  async getAccounts () {
+    if (this.hasRight('admin')) {
+      const accounts = await this.app.mongo.find('account')
+      return accounts.map(account => {
+        const nAccount = { ...account }
+        delete nAccount.password
+        return nAccount
+      })
+    }
+    throw new Error('You don\'t have the permission to do that')
   }
 
   async getAccount () {
