@@ -31,7 +31,3 @@ The next routes require to be logged in as an admin
 - `POST /api/account/approve ({ email })`
 - `GET /api/account/all`
 - `DELETE /api/account ({ email })`
-
-## Production
-
-A functional environment is running at the IP 145.239.194.132:1667
