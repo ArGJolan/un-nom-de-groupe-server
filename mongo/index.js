@@ -45,7 +45,7 @@ class Mongo {
   }
 
   async getOne (collection, filter) {
-    const results = await this.find(collection, { filter, limit: 1 })
+    const results = await this.find(collection, { filter, limit: 1, fields: { _id: 0 } })
     if (results.length !== 1) {
       throw new Error('Not found')
     }

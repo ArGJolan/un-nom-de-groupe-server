@@ -5,12 +5,12 @@ const controller = require('./controller/')
 const cors = require('cors')
 const Session = require('./session')
 
-// TEST: POST Login
-// TEST: POST Register
-// TEST: GET Profil
-// TEST: POST Approve
-// TEST: GET Profiles (admin)
-// TEST: DELETE Profile (admin)
+// DONE: Login                POST /login
+// DONE: Register             POST /register
+// DONE: Profil               GET /account
+// DONE: Approve              POST /account/approve
+// DONE: Profiles (admin)     GET /account/all
+// DONE: Profile (admin)      DELETE /account
 // TODO: POST Profil ??
 // TODO: GET Event
 // TODO: POST Event
@@ -35,18 +35,24 @@ class Server {
 
     this.server.use(bodyParser.json({ limit: '80mb' }))
 
-    this.server.use('/login/', controller.login(this.app))
-    this.server.use('/register/', controller.register(this.app))
-
     this.server.use('/api/', this.sessionMiddleware.bind(this))
+    this.server.use('/api/register/', controller.register(this.app))
+    this.server.use('/api/login/', controller.login(this.app))
+
+    this.server.use('/api/', this.authentication.bind(this))
     this.server.use('/api/session', controller.session(this.app))
     this.server.use('/api/account', controller.account(this.app))
 
-    this.server.use(this.errorHandling)
+    this.server.use(this.errorHandling.bind(this))
     this.server.use(express.static('public'))
   }
 
   async sessionMiddleware (req, res, next) {
+    req.session = new Session(this.app)
+    next()
+  }
+
+  async authentication (req, res, next) {
     const apiKey = req.get('Authorization')
     try {
       req.session = new Session(this.app)

@@ -12,5 +12,8 @@ module.exports = {
     host: '',
     port: '',
     database: ''
+  },
+  tasks: {
+    tasks: ['accounts']
   }
 }

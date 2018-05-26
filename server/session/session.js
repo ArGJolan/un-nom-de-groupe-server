@@ -1,18 +1,6 @@
 const crypto = require('crypto')
 const bcrypt = require('bcryptjs')
 
-function hashPassword (password) {
-  return new Promise((resolve, reject) => {
-    bcrypt.hash(password, 10, (err, hash) => {
-      if (err) {
-        reject(new Error(`Mot de passe : ${err.message}`))
-      } else {
-        resolve(hash)
-      }
-    })
-  })
-}
-
 class SessionService {
   constructor (app, apiKey) {
     this.app = app
@@ -40,9 +28,15 @@ class SessionService {
   }
 
   async approveAccount (email) {
+    if (!email) {
+      throw new Error('You must provide an email')
+    }
     if (this.hasRight('admin')) {
       try {
         await this.app.mongo.updateOne('account', { email }, { $set: { approved: true } })
+        const newAccount = await this.app.mongo.getOne('account', { email })
+        delete newAccount.password
+        return newAccount
       } catch (err) {
         console.error('Could not approve account', err)
         throw new Error('Could not appove account')
@@ -60,28 +54,36 @@ class SessionService {
     const account = {
       approved: false,
       email,
-      password: await hashPassword(password),
+      password: bcrypt.hashSync(password),
       rights: []
     }
     await this.app.mongo.insertOne('account', account)
-    return this.app.mongo.getOne('account', { email })
+    const newAccount = await this.app.mongo.getOne('account', { email })
+    delete newAccount.password
+    return newAccount
   }
 
   async login (email, password) { // Returns session
+    if (!email || !password) {
+      throw new Error('You must provide an email and a password')
+    }
     let account
     try {
-      account = await this.app.mongo.getOne('account', { email, password: await hashPassword(password) })
+      account = await this.app.mongo.getOne('account', { email })
+      if (!bcrypt.compareSync(password, account.password)) {
+        throw new Error('Wrong password')
+      }
     } catch (err) {
       console.error(err)
-      throw new Error('Could not connect')
+      throw new Error('Incorrect email or password')
     }
     if (account.approved !== true) {
-      throw new Error('Your account has not been activated yet')
+      throw new Error('Your account has not been approved yet')
     }
     delete account.password
     const apiKey = await this.generateApiKey()
     await this.app.mongo.insert('session', { email, apiKey })
-    return this.app.mongo.getOne('session', { apiKey })
+    return { ...await this.app.mongo.getOne('session', { apiKey }), ...account }
   }
 
   async deleteAccount (email) {
@@ -92,13 +94,14 @@ class SessionService {
         console.error('Could not find account', email, err)
         throw new Error('Could not find account', email)
       }
+    } else {
+      throw new Error('You don\'t have the permission to do that')
     }
-    throw new Error('You don\'t have the permission to do that')
   }
 
   async getAccounts () {
     if (this.hasRight('admin')) {
-      const accounts = await this.app.mongo.find('account')
+      const accounts = await this.app.mongo.find('account', {})
       return accounts.map(account => {
         const nAccount = { ...account }
         delete nAccount.password

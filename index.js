@@ -17,7 +17,7 @@ async function runModules (modules) {
   }
 }
 
-runModules(['mongo', 'server']).catch(err => {
+runModules(['mongo', 'server', 'tasks']).catch(err => {
   console.error('[run-error]', err)
   process.exit(1)
 })
