@@ -7,7 +7,6 @@ async function createAccounts (app, parameters) {
     await app.mongo.insert('account', {
       email: 'argjolan@gmail.com',
       password: bcrypt.hashSync('toto42'),
-      phone: '0612513172',
       rights: ['admin'],
       approved: true
     })
@@ -19,7 +18,6 @@ async function createAccounts (app, parameters) {
     await app.mongo.insert('account', {
       email: 'disabled@gmail.com',
       password: bcrypt.hashSync('toto42'),
-      phone: '0612513172',
       rights: [],
       approved: false
     })
@@ -31,7 +29,6 @@ async function createAccounts (app, parameters) {
     await app.mongo.insert('account', {
       email: 'to-enable@gmail.com',
       password: bcrypt.hashSync('toto42'),
-      phone: '0612513172',
       rights: [],
       approved: false
     })
