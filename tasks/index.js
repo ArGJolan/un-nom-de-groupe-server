@@ -4,7 +4,6 @@ class Tasks {
   constructor (config, app) {
     this.app = app
     this.tasks = config.tasks || []
-    console.log(this.tasks)
   }
 
   async run () {
